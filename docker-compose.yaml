@@ -1,0 +1,45 @@
+version: '3.9'
+
+services:
+  api:
+    build: .
+    container_name: nest_app
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+      - rabbitmq
+    environment:
+      - MONGO_URI=mongodb://admin:adminpassword@mongo:27017/youappdb?authSource=admin
+      - JWT_SECRET=your_jwt_secret
+      - RABBITMQ_URL=amqp://admin:adminpassword@rabbitmq:5672
+    volumes:
+      - .:/usr/src/app
+    command: npm run start:prod
+
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
+    volumes:
+      - mongo_data:/data/db
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"     # App connections
+      - "15672:15672"   # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=adminpassword
+
+volumes:
+  mongo_data:
