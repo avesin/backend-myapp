@@ -4,15 +4,22 @@ import {
     ArgumentsHost,
     HttpException,
     HttpStatus,
+    Injectable,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 
 @Catch()
+@Injectable()
 export class AllExceptionsFilter implements ExceptionFilter {
+    constructor(private readonly configService: ConfigService) { }
+
     catch(exception: unknown, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
         const request = ctx.getRequest<Request>();
+        const isDev = this.configService.get('APP_ENV') === 'development';
+
 
         const code =
             exception instanceof HttpException
@@ -24,7 +31,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         const error =
             exception instanceof HttpException
                 ? exception.getResponse()
-                : (exception as any).stack;
+                : isDev ? (exception as any).stack : "Internal server error";
 
 
         let message: any;
@@ -37,7 +44,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
             message = 'Internal error';
         }
 
-        // console.log(`[${request.method}] ${request.url} → ${status}\n${JSON.stringify(message)}\n${(exception as any).stack}`,)
+        if (isDev) {
+            console.log(`[${request.method}] ${request.url} → ${status}\n${JSON.stringify(message)}\n${(exception as any).stack}`,)
+        }
 
         response.status(code).json({
             code,

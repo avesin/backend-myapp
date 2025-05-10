@@ -6,18 +6,26 @@ import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { UsernameDto } from './dto/username.dto';
 import { UserDocument } from 'src/user/schemas/user.schema';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private configService: ConfigService,
   ) { }
 
   async register(registerDto: RegisterDto) {
     const existingUser = await this.userService.findByEmail(registerDto.email);
     if (existingUser) {
       throw new BadRequestException('Email already registered');
+    }
+
+    const existingUsername = await this.userService.findUsername(registerDto.username);
+
+    if (existingUsername) {
+      throw new BadRequestException('Username already used');
     }
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
@@ -44,23 +52,23 @@ export class AuthService {
 
       var refreshPayload = this.jwtService.decode(refresh_token)
 
-      if(refreshPayload.email != user.email){
+      if (refreshPayload.email != user.email) {
         throw new UnauthorizedException('Token Invalid');
       }
 
       const token = this.jwtService.sign(payload, {
-        expiresIn: '5m'
+        expiresIn: this.configService.get<string>('JWT_ACCESS_TTL')
       });
 
       const refreshToken = this.jwtService.sign(payload, {
-        expiresIn: '30d'
+        expiresIn: this.configService.get<string>('JWT_REFRESH_TTL')
       });
 
       return {
         token: token,
         refresh_token: refreshToken
       }
-    }else{
+    } else {
       throw new UnauthorizedException('Token Invalid');
     }
   }
@@ -111,11 +119,11 @@ export class AuthService {
     const payload = { sub: user._id, email: user.email, username: user.username };
 
     const token = this.jwtService.sign(payload, {
-      expiresIn: '5m'
+      expiresIn: this.configService.get<string>('JWT_ACCESS_TTL')
     });
 
     const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: '30d'
+      expiresIn: this.configService.get<string>('JWT_REFRESH_TTL')
     });
 
     return {

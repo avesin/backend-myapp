@@ -4,10 +4,13 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './common/filter/all-exceptions.filter';
 import * as bodyParser from 'body-parser';
+import { ConfigService } from '@nestjs/config';
 
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+
 
   // Global validation pipe
   app.useGlobalPipes(new ValidationPipe());
@@ -21,9 +24,9 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
-  app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalFilters(new AllExceptionsFilter(configService));
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
-  await app.listen(process.env.PORT ?? 3001);
+  await app.listen(configService.get<number>('PORT') ?? 3001);
 }
 bootstrap();
