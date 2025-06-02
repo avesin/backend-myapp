@@ -62,8 +62,8 @@ Client → [REST API: /sendMessage]
 Register a new user
 ```json
 {
-  "username": "aditya",
-  "email": "aditya@example.com",
+  "username": "avesina",
+  "email": "avesina@example.com",
   "password": "secure123"
 }
 ```
@@ -72,12 +72,12 @@ Register a new user
 Login and get access/refresh token
 ```json
 {
-  "email": "aditya@example.com",
+  "email": "avesina@example.com",
   "password": "secure123"
 }
 ```
 
-### GET `/api/auth/check-username?username=aditya`
+### GET `/api/auth/check-username?username=avesina`
 Check if a username is available
 
 ---
@@ -88,7 +88,7 @@ Check if a username is available
 Update your profile (requires JWT)
 ```json
 {
-  "name": "Aditya Mahendra",
+  "name": "Avesina Mustari",
   "bio": "Mobile dev & tech enthusiast"
 }
 ```
